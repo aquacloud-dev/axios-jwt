@@ -1,28 +1,35 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import ms from "ms";
-import { isExpired } from "./lib/token";
 
-import { Token } from "./lib/types";
+import { Queue } from "./lib/request-queue";
+import { isExpired } from "./lib/token";
+import { Token, RequestRefresh, Tokens, IInterceptorConfig } from "./lib/types";
 
 export const STORAGE_KEY = `auth-tokens-${process.env.NODE_ENV}`;
 
 // try to refresh a little before expiration (in ms)
 export const EXPIRE_FUDGE = ms("10s");
 
-export interface Tokens {
-    accessToken: Token;
-    refreshToken: Token;
-}
-
-export type RequestRefresh = (tokens: Tokens) => Promise<Tokens | string>;
+// export interface Tokens {
+//     accessToken: Token;
+//     refreshToken: Token;
+// }
+//
+// export type RequestRefresh = (tokens: Tokens) => Promise<Tokens | string>;
 
 export class TokenStorage {
-    isRefreshing = false;
+    private is_refreshing = false;
+    queue: Queue<Token | undefined> = new Queue();
 
     constructor(
         private storage: Storage,
-        private requestRefresh: RequestRefresh
+        private requestRefresh: RequestRefresh,
+        private config?: IInterceptorConfig
     ) {}
+
+    get isRefreshing(): boolean {
+        return this.is_refreshing;
+    }
 
     get tokens(): Tokens | undefined {
         const data = this.storage.getItem(STORAGE_KEY);
@@ -50,6 +57,7 @@ export class TokenStorage {
     get accessToken(): Token | undefined {
         return this.tokens?.accessToken;
     }
+
     set accessToken(token: Token | undefined) {
         if (!token) return;
         const tokens = this.tokens;
@@ -90,18 +98,62 @@ export class TokenStorage {
         this.tokens = undefined;
     }
 
+    interceptor = async (
+        requestConfig: AxiosRequestConfig
+    ): Promise<AxiosRequestConfig> => {
+        if (!this.refreshToken) return requestConfig;
+
+        if (this.is_refreshing) {
+            return new Promise<string | undefined>((resolve, reject) =>
+                this.queue.enqueue({ resolve, reject })
+            )
+                .then(token => {
+                    if (requestConfig.headers) {
+                        requestConfig.headers[
+                            this.config?.header ?? "Authorization"
+                        ] = `${this.config?.headerPrefix ?? "Bearer "}${token}`;
+                    }
+
+                    return requestConfig;
+                })
+                .catch(Promise.reject);
+        }
+
+        let accessToken: string | undefined;
+
+        try {
+            accessToken = await this.refreshTokenIfNeeded();
+            this.queue.resolve(accessToken);
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                this.queue.decline(e);
+                throw new Error(
+                    `Unable to refresh acces token due to token request error: ${e.message}`
+                );
+            }
+        }
+
+        if (requestConfig.headers) {
+            requestConfig.headers[this.config?.header ?? "Authorization"] = `${
+                this.config?.headerPrefix ?? "Bearer "
+            }${accessToken}`;
+        }
+
+        return requestConfig;
+    };
+
     async refreshTokenIfNeeded(): Promise<Token | undefined> {
         let accessToken = this.accessToken;
 
         if (!accessToken || isExpired(accessToken)) {
-            accessToken = await this.refreshTokens();
+            accessToken = await this.doRefresh();
             this.accessToken = accessToken;
         }
 
         return accessToken;
     }
 
-    private async refreshTokens() {
+    private async doRefresh() {
         if (!this.tokens || !this.refreshToken) {
             throw new Error(
                 "Unable to refresh tokens. No refresh token available."
@@ -109,7 +161,7 @@ export class TokenStorage {
         }
 
         try {
-            this.isRefreshing = true;
+            this.is_refreshing = true;
             const newTokens = await this.requestRefresh(this.tokens);
 
             if (typeof newTokens === "object" && newTokens.accessToken) {
@@ -145,7 +197,7 @@ export class TokenStorage {
                 `Failed to refrehs auth token and failed to parse error`
             );
         } finally {
-            this.isRefreshing = false;
+            this.is_refreshing = false;
         }
     }
 }
