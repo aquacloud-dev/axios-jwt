@@ -2,7 +2,7 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 
 import { MemoryStorage } from "@/adapters/MemoryStorage";
-import { TokenStorage as TokenInterceptor } from "@/index";
+import { TokenInterceptor as TokenInterceptor } from "@/index";
 
 const memoryStorage = new MemoryStorage();
 const authTokens = new TokenInterceptor(memoryStorage, async tokens => {

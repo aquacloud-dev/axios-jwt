@@ -1,14 +1,20 @@
 {
-    "name": "@aquacloud/axios-jwt",
+    "name": "@aquacloud/axios-token-interceptor",
     "version": "0.0.1",
     "description": "Handle rotating tokens without pain",
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "license": "MIT",
-    "keywords": [],
     "author": "Federico Vitale <federico.vitale@aquacloud.it>",
+    "keywords": [
+        "api",
+        "jwt",
+        "auth",
+        "refresh",
+        "axios"
+    ],
     "contributors": [
-        "federico.vitale@aquacloud.it"
+        "rawnly"
     ],
     "scripts": {
         "coverage": "vitest run -c ./config/vitest.config.ts --coverage",
@@ -24,10 +30,10 @@
             "import": "./build/index.mjs",
             "types": "./build/index.d.ts"
         },
-        "./math": {
-            "import": "./build/math.mjs",
-            "default": "./build/math.js",
-            "types": "./build/math.d.ts"
+        "./adapaters/*": {
+            "import": "./build/adapters/*.js",
+            "default": "./build/adapters/*.js",
+            "types": "./build/adapters/*.d.ts"
         }
     },
     "devDependencies": {

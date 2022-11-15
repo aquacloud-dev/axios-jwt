@@ -10,14 +10,7 @@ export const STORAGE_KEY = `auth-tokens-${process.env.NODE_ENV}`;
 // try to refresh a little before expiration (in ms)
 export const EXPIRE_FUDGE = ms("10s");
 
-// export interface Tokens {
-//     accessToken: Token;
-//     refreshToken: Token;
-// }
-//
-// export type RequestRefresh = (tokens: Tokens) => Promise<Tokens | string>;
-
-export class TokenStorage {
+export class TokenInterceptor {
     private is_refreshing = false;
     queue: Queue<Token | undefined> = new Queue();
 
