@@ -10,7 +10,7 @@ export const STORAGE_KEY = `auth-tokens-${process.env.NODE_ENV}`;
 // try to refresh a little before expiration (in ms)
 export const EXPIRE_FUDGE = ms("10s");
 
-export class TokenInterceptor {
+export default class AxiosJwt {
     private is_refreshing = false;
     queue: Queue<Token | undefined> = new Queue();
 

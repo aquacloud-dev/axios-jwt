@@ -1,5 +1,5 @@
 {
-    "name": "@aquacloud/axios-token-interceptor",
+    "name": "@aquacloud/axios-jwt",
     "version": "0.0.1",
     "description": "Handle rotating tokens without pain",
     "main": "build/index.js",

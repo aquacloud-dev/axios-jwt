@@ -2,10 +2,10 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 
 import { MemoryStorage } from "@/adapters/MemoryStorage";
-import { TokenInterceptor as TokenInterceptor } from "@/index";
+import { AxiosJwt as AxiosJwt } from "@/index";
 
 const memoryStorage = new MemoryStorage();
-const authTokens = new TokenInterceptor(memoryStorage, async tokens => {
+const authTokens = new AxiosJwt(memoryStorage, async tokens => {
     const response = await axios.post(
         `http://localhost:3000/api/auth/refresh`,
         { tokens },
