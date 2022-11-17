@@ -13,9 +13,7 @@
         "refresh",
         "axios"
     ],
-    "contributors": [
-        "rawnly"
-    ],
+    "contributors": [],
     "scripts": {
         "coverage": "vitest run -c ./config/vitest.config.ts --coverage",
         "test": "vitest -c ./config/vitest.config.ts",
