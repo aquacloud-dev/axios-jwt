@@ -1,9 +1,6 @@
 import decode, { JwtPayload } from "jwt-decode";
-import ms from "ms";
 
 import { type Token } from "./types";
-
-export const DEFAULT_LEEWAY = ms("10s");
 
 export const getTimestamp = (token: Token): number | undefined => {
     const decoded = decode<JwtPayload>(token);
@@ -16,10 +13,7 @@ export const getExpiresIn = (token: Token): number => {
     return expiration - Date.now() / 1000;
 };
 
-export const isExpired = (
-    token: Token,
-    leeway: number = DEFAULT_LEEWAY
-): boolean => {
+export const isExpired = (token: Token, leeway: number): boolean => {
     if (!token) return true;
     const expiresIn = getExpiresIn(token);
 
