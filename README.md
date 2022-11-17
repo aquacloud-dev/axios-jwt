@@ -13,12 +13,23 @@
 ```ts
 // api.ts
 
-import AxiosJwt from "@aquacloud/axios-jwt";
+import AxiosJwt, { type RequestRefresh } from "@aquacloud/axios-jwt";
 import CookieStorage from "@aquacloud/axios-jwt/adapters/cookie-storage";
 import axios from "axios";
 
 // Create an axios instance
 export const api = axios.create({ baseURL: "http://localhost:8080/api" });
+
+const requestRefresh: RequestRefresh = async (tokens: Tokens) => {
+    // DO NOT USE THE `api` INSTANCE
+    const response = await axios.post("http://localhost:3000", tokens, {
+        headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+        },
+    });
+
+    return response.data;
+};
 
 // Initialize the class
 export const tokenInterceptor = new AxiosJwt({

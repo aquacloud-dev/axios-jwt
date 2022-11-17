@@ -1,4 +1,4 @@
-export class MemoryStorage<T extends Record<string, string | null>>
+class MemoryStorage<T extends Record<string, string | null>>
     implements Storage
 {
     constructor(private data: T = {} as T) {}
@@ -30,3 +30,5 @@ export class MemoryStorage<T extends Record<string, string | null>>
         delete this.data[key];
     }
 }
+
+export default MemoryStorage;

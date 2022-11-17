@@ -1,49 +1,75 @@
 import axios from "axios";
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 
-import { MemoryStorage } from "@/adapters/MemoryStorage";
-import { AxiosJwt as AxiosJwt } from "@/index";
+import MemoryStorage from "@/adapters/memory-storage";
+import AxiosJwt from "@/index";
 
+const STORAGE_KEY = "token-storage-key";
 const memoryStorage = new MemoryStorage();
-const authTokens = new AxiosJwt(memoryStorage, async tokens => {
-    const response = await axios.post(
-        `http://localhost:3000/api/auth/refresh`,
-        { tokens },
-        {
-            // interceptor config
-            headers: {
-                Authorization: `Bearer ${tokens.accessToken}`,
-            },
-        }
-    );
-
-    return response.data;
+const tokenInterceptor = new AxiosJwt({
+    storage: memoryStorage,
+    requestRefresh: async tokens => tokens,
+    options: {
+        storageKey: STORAGE_KEY,
+    },
 });
 
 beforeAll(() => {
-    const token = jwt.sign(
-        {
-            exp: Date.now() + 3000,
-            iat: Date.now(),
-            data: { user: { id: 1 } },
-        },
-        "secret",
-        {
-            algorithm: "HS256",
-        }
-    );
-
-    authTokens.clear();
-    authTokens.tokens = {
-        refreshToken: "my-refresh-token",
-        accessToken: token,
-    };
+    // const token = jwt.sign(
+    //     {
+    //         exp: Date.now() + 3000,
+    //         iat: Date.now(),
+    //         data: { user: { id: 1 } },
+    //     },
+    //     "secret",
+    //     {
+    //         algorithm: "HS256",
+    //     }
+    // );
+    //
+    tokenInterceptor.clearTokens();
 });
 
 test("add the interceptor to the axios instance", () => {
     const interceptors = axios.interceptors.request as any;
     expect(interceptors.handlers).toHaveLength(0);
 
-    axios.interceptors.request.use(authTokens.interceptor);
+    tokenInterceptor.apply(axios);
     expect(interceptors.handlers).toHaveLength(1);
+});
+
+test("clear auth tokens", () => {
+    memoryStorage.setItem(STORAGE_KEY, {
+        accessToken: "string",
+        refreshToken: "string",
+    });
+
+    expect(tokenInterceptor.tokens).toBeTruthy();
+    expect(tokenInterceptor.tokens).toStrictEqual({
+        accessToken: "string",
+        refreshToken: "string",
+    });
+
+    tokenInterceptor.clearTokens();
+
+    expect(memoryStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(tokenInterceptor.tokens).toBeUndefined();
+});
+
+test("set auth tokens", () => {
+    tokenInterceptor.tokens = {
+        accessToken: "accessToken",
+        refreshToken: "refreshToken",
+    };
+
+    const tokens = JSON.parse(memoryStorage.getItem(STORAGE_KEY) ?? "null");
+
+    expect(memoryStorage.getItem(STORAGE_KEY)).toBeTruthy();
+    expect(tokens).toHaveProperty("refreshToken");
+    expect(tokens).toHaveProperty("accessToken");
+});
+
+test("check if is logged in", () => {
+    const result = tokenInterceptor.isLoggedIn;
+    expect(result).toBe(true);
 });

@@ -34,6 +34,11 @@
             "import": "./build/adapters/*.js",
             "default": "./build/adapters/*.js",
             "types": "./build/adapters/*.d.ts"
+        },
+        "./adapters": {
+            "import": "./build/adapters/index.js",
+            "default": "./build/adapters/index.js",
+            "types": "./build/adapters/index.d.ts"
         }
     },
     "devDependencies": {

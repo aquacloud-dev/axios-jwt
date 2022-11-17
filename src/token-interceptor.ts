@@ -101,7 +101,10 @@ export default class TokenInterceptor {
     }
 
     get isLoggedIn(): boolean {
-        return !!this.refreshToken;
+        return (
+            typeof this.refreshToken === "string" &&
+            this.refreshToken.length > 0
+        );
     }
 
     clearTokens() {
