@@ -6,9 +6,26 @@ import { isExpired } from "./lib/token";
 import { Token, RequestRefresh, Tokens } from "./lib/types";
 
 interface ITokenOptions {
+  /**
+   *
+   * Header name (default: `Authorization`)
+   */
   header?: string;
+  /**
+   *
+   * Header prefix (default: `Bearer `)
+   */
   headerPrefix?: string;
+  /**
+   *
+   * defines the leeway for the JWT expiry validation.
+   * defined in seconds.
+   */
   leeway?: string | number;
+  /**
+   *
+   * The name given to the storage slot.
+   */
   storageKey?: string;
 }
 
@@ -70,6 +87,14 @@ export default class TokenInterceptor {
     }
 
     this.storage.setItem(this.config.storageKey, JSON.stringify(tokens));
+  }
+
+  get leeway(): number {
+    if (typeof this.config.leeway === "string") {
+      return ms(this.config.leeway) / 1000;
+    }
+
+    return this.config.leeway;
   }
 
   get accessToken(): Token | undefined {
@@ -171,9 +196,13 @@ export default class TokenInterceptor {
 
   async refreshTokenIfNeeded(): Promise<Token | undefined> {
     const accessToken = this.accessToken;
-    const leeway = ms(this.config.leeway as string);
 
-    if (!accessToken || isExpired(accessToken, leeway)) {
+    if (!accessToken || isExpired(accessToken, this.leeway)) {
+      this.log({
+        accessToken,
+        leeway: this.leeway,
+        isExpired: isExpired(accessToken ?? "", this.leeway),
+      });
       this.log("Invalid access token or expired token. Refreshing...");
       const newToken = await this.doRefresh();
       this.accessToken = accessToken;

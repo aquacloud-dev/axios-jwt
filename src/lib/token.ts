@@ -13,7 +13,12 @@ export const getExpiresIn = (token: Token): number => {
   return expiration - Date.now() / 1000;
 };
 
-export const isExpired = (token: Token, leeway: number): boolean => {
+/**
+ *
+ * @param token the accessToken
+ * @param leeway must be in seconds (default: 1200s (20 minutes))
+ */
+export const isExpired = (token: Token, leeway = 1200): boolean => {
   if (!token) return true;
   const expiresIn = getExpiresIn(token);
 

@@ -1,6 +1,6 @@
 {
   "name": "@aquacloud/axios-jwt",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Handle rotating tokens without pain",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -17,7 +17,9 @@
     "refresh",
     "axios"
   ],
-  "contributors": [],
+  "contributors": [
+    "rawnly"
+  ],
   "scripts": {
     "coverage": "vitest run -c ./config/vitest.config.ts --coverage",
     "test": "vitest -c ./config/vitest.config.ts",
@@ -58,6 +60,7 @@
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-unused-imports": "^2.0.0",
+    "jsonwebtoken": "^8.5.1",
     "prettier": "^2.7.1",
     "tsup": "^6.3.0",
     "turbo": "^1.6.3",
