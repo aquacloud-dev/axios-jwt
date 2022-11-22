@@ -1,6 +1,6 @@
 {
   "name": "@aquacloud/axios-jwt",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Handle rotating tokens without pain",
   "main": "build/index.js",
   "types": "build/index.d.ts",
